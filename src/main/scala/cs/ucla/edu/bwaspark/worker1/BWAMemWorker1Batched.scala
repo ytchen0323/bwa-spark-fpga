@@ -30,7 +30,7 @@ object BWAMemWorker1Batched {
                            ): SWBatchTimeBreakdown = {
                            //): Array[ReadType] = { //all possible alignments for all the reads  
 
-    System.load("/curr/genomics_spark/shared_lib/jniSWExtend.so")
+    System.load("/cdsc_nfs/cdsc0/software/spark/new_version/bwa-spark-fpga/target/jniSWExtend.so")
 
     //for paired alignment, to add
     //!!!to add!!!

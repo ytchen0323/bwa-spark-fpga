@@ -106,7 +106,7 @@ object BWAMEMSpark {
     //def it2ArrayIt(iter: Iterator[FASTQRecord]): Iterator[Array[ReadType]] = {
     // *****     PROFILING    *****
     def it2ArrayIt(iter: Iterator[FASTQRecord]): Iterator[SWBatchTimeBreakdown] = {
-      val batchedDegree = 1024
+      val batchedDegree = 32768
       var counter = 0
 
       //var ret = new MutableList[Array[ReadType]]

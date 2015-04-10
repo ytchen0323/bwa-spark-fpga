@@ -57,16 +57,16 @@ ALL TIMES.
 //#include "my_socket.h"
 #include "my_timer.h"
 
-#define DATA_SIZE 51200
-#define TOTAL_TASK_NUMS 1024
-#define RESULT_SIZE TOTAL_TASK_NUMS*4
+#define TOTAL_TASK_NUMS 32768
+#define DATA_SIZE (TOTAL_TASK_NUMS*64)
+#define FPGA_RET_PARAM_NUM 5
+#define RESULT_SIZE TOTAL_TASK_NUMS*FPGA_RET_PARAM_NUM
 
 #define DONE 1
 #define FLAG_NUM 2
 
 // packet size interms of # of integers
 #define PACKET_SIZE 2
-#define FPGA_RET_PARAM_NUM 4
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -344,7 +344,7 @@ int main(int argc, char** argv)
 
     int done = 0;
     while(done == 0) {
-      done = (int) *(shm_addr);
+      done = (int) *((int*)shm_addr);
       clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
     }
 
@@ -355,6 +355,10 @@ int main(int argc, char** argv)
     accTime (&socSendTime, &timer);
 
     taskNum = a[2];
+    for (int i=0; i<taskNum; i++) {
+      int tmp = *(a+8+i*8+7);
+      assert(tmp >=0 && tmp < TOTAL_TASK_NUMS);
+    }
     //printf("Task Num: %d\n", taskNum);
 
     //printf("\nparameter recieved --- \n");
@@ -417,7 +421,7 @@ int main(int argc, char** argv)
     // put data back to shared memory
     //printf("Put data back to the shared memory\n");
     memcpy(shm_addr + FLAG_NUM * sizeof(int), results, sizeof(int) * FPGA_RET_PARAM_NUM * taskNum);
-    *(shm_addr + sizeof(int)) = DONE;
+    *((int*)(shm_addr + sizeof(int))) = DONE;
 
     accTime(&socRecvTime, &timer);
     //printf("\n************* Task finished! *************\n");

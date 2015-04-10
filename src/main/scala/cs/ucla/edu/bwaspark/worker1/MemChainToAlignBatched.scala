@@ -38,11 +38,11 @@ object MemChainToAlignBatched {
   val commonSize = 32
   val indivSize = 32
   val retValues = 8
-  val DATA_SIZE = 51200
-  val TOTAL_TASK_NUM = 1024
+  val DATA_SIZE = TOTAL_TASK_NUM*64
+  val TOTAL_TASK_NUM = 32768
   val RESULT_SIZE = TOTAL_TASK_NUM * 8
-  val TASK_LIMIT = 128
-  val FPGA_RET_PARAM_NUM = 4
+  val TASK_LIMIT = 64
+  val FPGA_RET_PARAM_NUM = 5
 
   //Run DPs on FPGA
   def runOnFPGAJNI(taskNum: Int, //number of tasks
@@ -69,7 +69,6 @@ object MemChainToAlignBatched {
       }
 
       val buf1Len = commonSize + indivSize*taskNum
-      //val buf1 = ByteBuffer.allocate(DATA_SIZE*4).order(ByteOrder.nativeOrder())
       val buf1 = new Array[Byte](buf1Len)
       buf1(0) = (tasks(0).oDel.toByte)
       buf1(1) = (tasks(0).eDel.toByte)
@@ -79,20 +78,6 @@ object MemChainToAlignBatched {
       buf1(5) = (tasks(0).penClip3.toByte)
       buf1(6) = (tasks(0).w.toByte)
       int2ByteArray(buf1, 8, taskNum) //8,9,10,11
-      //buf1.put(tasks(0).oDel.toByte)
-      //buf1.put(tasks(0).eDel.toByte)
-      //buf1.put(tasks(0).oIns.toByte)
-      //buf1.put(tasks(0).eIns.toByte)
-      //buf1.put(tasks(0).penClip5.toByte)
-      //buf1.put(tasks(0).penClip3.toByte)
-      //buf1.put(tasks(0).w.toByte)
-      //buf1.put(0.toByte)
-      //buf1.putInt(taskNum)
-      //buf1.putInt(0)
-      //buf1.putInt(0)
-      //buf1.putInt(0)
-      //buf1.putInt(0)
-      //buf1.putInt(0)
       var i = 0
       var leftMaxIns = 0
       var leftMaxDel = 0
@@ -203,14 +188,15 @@ object MemChainToAlignBatched {
       i = 0
       while (i < taskNum) {
         if (results(i) == null) results(i) = new ExtRet
-        results(i).idx = tasks(i).idx
-        results(i).qBeg = bufRet(0)
-        results(i).qEnd = bufRet(1)
-        results(i).rBeg = bufRet(2)
-        results(i).rEnd = bufRet(3)
-        results(i).score = bufRet(4)
-        results(i).trueScore = bufRet(5)
-        results(i).width = bufRet(6)
+	results(i).idx = ((bufRet(1+FPGA_RET_PARAM_NUM*2*i).toInt) << 16) | bufRet(0+FPGA_RET_PARAM_NUM*2*i).toInt
+	assert (results(i).idx == bufRet(0+FPGA_RET_PARAM_NUM*2*i).toInt)
+        results(i).qBeg = bufRet(2+FPGA_RET_PARAM_NUM*2*i)
+        results(i).qEnd = bufRet(3+FPGA_RET_PARAM_NUM*2*i)
+        results(i).rBeg = bufRet(4+FPGA_RET_PARAM_NUM*2*i)
+        results(i).rEnd = bufRet(5+FPGA_RET_PARAM_NUM*2*i)
+        results(i).score = bufRet(6+FPGA_RET_PARAM_NUM*2*i)
+        results(i).trueScore = bufRet(7+FPGA_RET_PARAM_NUM*2*i)
+        results(i).width = bufRet(8+FPGA_RET_PARAM_NUM*2*i)
         i = i+1
       }
 
